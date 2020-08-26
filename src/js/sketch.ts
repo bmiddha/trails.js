@@ -1,12 +1,11 @@
 import p5 from 'p5';
 import '../css/style.scss';
 
-const sketch = p => {
+const sketch = (p: p5) => {
   let canvas;
-  let logo;
+  let logo: p5.Image;
   let logoWidth = 250;
   let logoHeight = 114;
-
   p.preload = () => {
     logo = p.loadImage("assets/p5js.svg");
   };

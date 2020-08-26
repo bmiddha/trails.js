@@ -2,8 +2,8 @@ const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-	devtool: "inline-sourcemap",
-	entry: __dirname + '/src/js/sketch.js',
+	devtool: "inline-source-map",
+	entry: __dirname + '/src/js/sketch.ts',
 	output: {
 		path: __dirname + '/dist/',
 		publicPath: '/',
@@ -16,14 +16,9 @@ module.exports = {
 	},
 	module: {
 		rules: [{
-				test: /\.js$/,
-				exclude: /node_modules/,
-				use: {
-					loader: 'babel-loader',
-					options: {
-						presets: ['@babel/preset-env']
-					}
-				}
+			test: /\.(ts|js)x?$/i,
+			exclude: /(node_modules)/,
+			loader: 'babel-loader'
 			},
 			{
 				test: /\.scss$/,

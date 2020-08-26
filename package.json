@@ -2,7 +2,6 @@
   "scripts": {
     "clean": "rimraf dist",
     "dev": "webpack-dev-server --progress --colors --inline --hot --open",
-    "prebuild": "npm install",
     "build": "npm run clean && webpack --progress --colors -p"
   },
   "dependencies": {
@@ -11,6 +10,8 @@
   "devDependencies": {
     "@babel/core": "7.11.1",
     "@babel/preset-env": "7.11.0",
+    "@babel/preset-typescript": "^7.10.4",
+    "@types/p5": "^0.9.1",
     "babel-loader": "8.1.0",
     "copy-webpack-plugin": "6.0.3",
     "css-loader": "4.2.1",
