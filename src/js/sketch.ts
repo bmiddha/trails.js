@@ -4,15 +4,16 @@ import '../css/style.scss';
 const sketch = (p: p5) => {
   let canvas;
   let logo: p5.Image;
-  let logoWidth = 250;
-  let logoHeight = 114;
+  let imageWidth = 864;
+  let imageHeight = 864;
   p.preload = () => {
-    logo = p.loadImage("assets/p5js.svg");
+    logo = p.loadImage("assets/frog.svg");
   };
 
   p.setup = () => {
     canvas = p.createCanvas(p.windowWidth, p.windowHeight);
-    p.image(logo, p.windowWidth/2 - logoWidth/2, p.windowHeight/2 - logoHeight/2);
+    p.background(255);
+    p.image(logo, p.windowWidth/2 - imageWidth/2, p.windowHeight/2 - imageHeight/2);
   };
 
   p.draw = () => {
@@ -25,11 +26,12 @@ const sketch = (p: p5) => {
   
     }
     p.ellipse(p.mouseX, p.mouseY, 30, 30);
+    p.image(logo, p.windowWidth/2 - imageWidth/2, p.windowHeight/2 - imageHeight/2);
   };
 
   p.windowResized = () => {
     p.resizeCanvas(p.windowWidth, p.windowHeight);
-    p.image(logo, p.windowWidth/2 - logoWidth/2, p.windowHeight/2 - logoHeight/2);
+    p.image(logo, p.windowWidth/2 - imageWidth/2, p.windowHeight/2 - imageHeight/2);
   };
 
   p.keyPressed = () => {
