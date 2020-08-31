@@ -10,15 +10,19 @@ type Point = {
 
 const sketch = (p: p5) => {
   class Ball {
-    public size = 10;
+    public size: number;
     public pos: Point;
     public speed: Point;
     constructor() {
-      this.pos.x = p.random(0, p.windowWidth);
-      this.pos.y = p.random(0, p.windowHeight);
+      this.pos = {
+        x: p.random(0, p.windowWidth),
+        y: p.random(0, p.windowHeight)
+      }
+      this.speed = {
+        x: p.random(-3, 3),
+        y: p.random(-3, 3)
+      }
       this.size = p.random(5, 11);
-      this.speed.x = p.random(-3, 3);
-      this.speed.y = p.random(-3, 3);
     }
   }
 
@@ -86,11 +90,10 @@ const sketch = (p: p5) => {
     if (p.keyCode == 32) {
       enableTrails = !enableTrails;
     }
-    return false;
   };
 
   p.mouseWheel = (event: any) => {
-    if (event) speedMultiplier += event.delta * 0.001;
+    if (event) speedMultiplier += event.delta * 0.0001;
   };
 
   p.windowResized = () => {
