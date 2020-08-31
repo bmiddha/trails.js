@@ -3,17 +3,16 @@ import "../css/style.scss";
 
 let amt: number, startColor: p5.Color, newColor: p5.Color;
 
+type Point = {
+  x: number;
+  y: number;
+};
+
 const sketch = (p: p5) => {
   class Ball {
     public size = 10;
-    public pos = {
-      x: p.windowWidth / 2,
-      y: 20,
-    };
-    public speed = {
-      x: 0,
-      y: 3,
-    };
+    public pos: Point;
+    public speed: Point;
     constructor() {
       this.pos.x = p.random(0, p.windowWidth);
       this.pos.y = p.random(0, p.windowHeight);
@@ -25,8 +24,9 @@ const sketch = (p: p5) => {
 
   let speedMultiplier = 1;
   let balls: Ball[] = [];
-  for (let i = 0; i < 10; i ++)
+  for (let i = 0; i < 10; i++) {
     balls.push(new Ball());
+  }
   let canvas;
   let enableFreeze: boolean = false;
   let enableTrails: boolean = true;
@@ -89,7 +89,7 @@ const sketch = (p: p5) => {
     return false;
   };
 
-  p.mouseWheel = (event) => {
+  p.mouseWheel = (event: any) => {
     if (event) speedMultiplier += event.delta * 0.001;
   };
 
