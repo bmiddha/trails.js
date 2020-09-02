@@ -1,35 +1,45 @@
 import p5 from "p5";
 import "../css/style.scss";
+import { colorPallets } from "./colorPallets";
 
 let amt: number, startColor: p5.Color, newColor: p5.Color;
+
+const colors = colorPallets[Math.floor(Math.random() * colorPallets.length)];
+let nextIndex = 0;
 
 type Point = {
   x: number;
   y: number;
 };
 
-const sketch = (p: p5) => {
-  class Ball {
-    public size: number;
-    public pos: Point;
-    public speed: Point;
-    constructor() {
-      this.pos = {
-        x: p.random(0, p.windowWidth),
-        y: p.random(0, p.windowHeight)
-      }
-      this.speed = {
-        x: p.random(-3, 3),
-        y: p.random(-3, 3)
-      }
-      this.size = p.random(5, 11);
-    }
-  }
+document.addEventListener('contextmenu', event => event.preventDefault());
 
-  let speedMultiplier = 1;
-  let balls: Ball[] = [];
+const randomFloat =  (min: number, max: number) => (Math.random() * (min - max) + max);
+
+class Ball {
+  public size: number;
+  public pos: Point;
+  public speed: Point;
+  constructor(x: number, y: number) {
+    this.pos = {
+      x,y
+    };
+    this.speed = {
+      x: randomFloat(-3, 3),
+      y: randomFloat(-3, 3),
+    };
+    this.size = randomFloat(5, 11);
+  }
+  static spawnBall(x: number, y: number) {
+    Ball.balls.push(new Ball(x, y))
+  }
+  static balls: Ball[] = [];
+}
+let speedMultiplier = 1;
+
+const sketch = (p: p5) => {
   for (let i = 0; i < 10; i++) {
-    balls.push(new Ball());
+    Ball.spawnBall(randomFloat(0, p.windowWidth), randomFloat(0, p.windowHeight))
   }
   let canvas;
   let enableFreeze: boolean = false;
@@ -44,7 +54,7 @@ const sketch = (p: p5) => {
     p.noStroke();
     p.ellipseMode(p.RADIUS);
     startColor = p.color(255, 255, 255);
-    newColor = p.color(p.random(255), p.random(255), p.random(255));
+    newColor = p.color(colors[0]);
     amt = 0;
   };
 
@@ -53,14 +63,7 @@ const sketch = (p: p5) => {
       p.background(255);
     }
 
-    if (p.mouseIsPressed) {
-      let ball = new Ball();
-      ball.pos.x = p.mouseX;
-      ball.pos.y = p.mouseY;
-      balls.push(ball);
-    }
-
-    balls.forEach((ball) => {
+    Ball.balls.forEach((ball) => {
       if (!enableFreeze) {
         p.fill(p.lerpColor(startColor, newColor, amt));
         ball.pos.x += ball.speed.x * speedMultiplier;
@@ -75,8 +78,10 @@ const sketch = (p: p5) => {
       amt += 0.01;
       if (amt >= 1) {
         amt = 0.0;
+        nextIndex++;
+        if (nextIndex >= colors.length) nextIndex = 0
         startColor = newColor;
-        newColor = p.color(p.random(255), p.random(255), p.random(255));
+        newColor = p.color(colors[nextIndex]);
       }
     }
   };
@@ -89,6 +94,18 @@ const sketch = (p: p5) => {
     // space
     if (p.keyCode == 32) {
       enableTrails = !enableTrails;
+    }
+    // delete
+    if (p.keyCode == 46) {
+      Ball.balls = []
+    }
+  };
+
+  p.mousePressed = (event: any) => {
+    if (p.mouseButton == p.LEFT) {
+      Ball.spawnBall(event.clientX, event.clientY);
+    }
+    if (p.mouseButton == p.RIGHT) {
     }
   };
 

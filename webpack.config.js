@@ -9,6 +9,7 @@ module.exports = {
 		publicPath: '/',
 		filename: 'js/sketch.js'
 	},
+	resolve: { extensions: ['*', '.js', '.jsx', '.ts', '.tsx'] },
 	devServer: {
 		inline: true,
 		hot: true,
@@ -31,10 +32,6 @@ module.exports = {
 			patterns: [{
 					from: 'src/index.html',
 					to: 'index.html'
-				},
-				{
-					from: 'src/assets',
-					to: 'assets'
 				}
 			],
 		})
