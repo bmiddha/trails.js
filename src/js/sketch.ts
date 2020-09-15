@@ -1,109 +1,223 @@
 import p5 from "p5";
 import "../css/style.scss";
-import { colorPallets } from "./colorPallets";
-
-let amt: number, startColor: p5.Color, newColor: p5.Color;
-
-const colors = colorPallets[Math.floor(Math.random() * colorPallets.length)];
-let nextIndex = 0;
 
 type Point = {
   x: number;
   y: number;
 };
 
-document.addEventListener('contextmenu', event => event.preventDefault());
+type Speed = Point;
+type Position = Point;
+type Edge = {
+  x: {
+    start: number;
+    end: number;
+  };
+  y: {
+    start: number;
+    end: number;
+  };
+};
 
-const randomFloat =  (min: number, max: number) => (Math.random() * (min - max) + max);
+document.addEventListener("contextmenu", (event) => event.preventDefault());
+
+const colorPallets = [
+  ["#12c2e9", "#c471ed", "#f64f59"], // JShine
+  ["#0F2027", "#203A43", "#f64f59"], // Moonlit Asteroid
+  ["#a8c0ff", "#3f2b96"], // Slight Ocean View
+  ["#34e89e", "#0f3443"], // Pacific Dream
+  ["#24C6DC", "#514A9D"], // Mantle
+  ["#e1eec3", "#f05053"], // Velvet Sun
+  // ["#e3e8ea", "#bccad0", "#9ba8ae", "#707a7e", "#495054"], // 0 - monochrome grey
+  // ["#8808e0", "#9808e0", "#a808e0", "#b808e0", "#c808e0"], // 1 - purple
+  // ["#4C5B5C", "#FF715B", "#F9CB40", "#BCED09", "#2F52E0"], // 2
+  // ["#0D1821", "#344966", "#E6AACE", "#F0F4EF", "#BFCC94"], // 3
+  // ["#BFCC94", "#F7717D", "#DE639A", "#7F2982", "#16001E"], // 4
+  // ["#16001E", "#BDADEA", "#BEA2C2", "#A37871", "#4E4B5C"], // 5
+  // ["#2E4939", "#4CAF9C", "#F4994B", "#F44731", "#7B1516"], // 6
+];
+
+let started = false;
+
+let balls: Ball[], edge: Edge, colors: Colors;
+const ballSize = 50;
+let speedMultiplier = 1;
+const padding = 50;
+
+class Colors {
+  p: p5;
+  colorsArray: string[];
+  startColor: p5.Color;
+  newColor: p5.Color;
+  amt: number;
+  nextIndex: number;
+
+  constructor(p: p5, palletIndex: number) {
+    this.p = p;
+    this.colorsArray = colorPallets[palletIndex];
+    this.startColor = p.color(this.colorsArray[0]);
+    this.newColor = p.color(this.colorsArray[1]);
+    this.nextIndex = 2;
+    this.amt = 0;
+  }
+  update() {
+    const _color = this.p.lerpColor(this.startColor, this.newColor, this.amt);
+    _color.setAlpha(255);
+    this.p.fill(_color);
+    this.amt += 0.01;
+    if (this.amt >= 1) {
+      this.amt = 0.0;
+      this.nextIndex++;
+      if (this.nextIndex >= this.colorsArray.length) this.nextIndex = 0;
+      this.startColor = this.newColor;
+      this.newColor = this.p.color(this.colorsArray[this.nextIndex]);
+    }
+  }
+}
 
 class Ball {
-  public size: number;
-  public pos: Point;
-  public speed: Point;
-  constructor(x: number, y: number) {
-    this.pos = {
-      x,y
-    };
-    this.speed = {
-      x: randomFloat(-3, 3),
-      y: randomFloat(-3, 3),
-    };
-    this.size = randomFloat(5, 11);
+  p: p5;
+  position: Position;
+  edge: Edge;
+  speed: Speed;
+  size: number;
+  index: number;
+
+  constructor(p: p5, position: Position, speed: Speed, size: number, index: number) {
+    this.p = p;
+    this.position = position;
+    this.speed = speed;
+    this.size = size;
+    this.index = index;
   }
-  static spawnBall(x: number, y: number) {
-    Ball.balls.push(new Ball(x, y))
+
+  move() {
+    if (this.position.x > edge.x.end - this.size / 2 || this.position.x < edge.x.start + this.size / 2)
+      this.speed.x *= -1;
+    if (this.position.y > edge.y.end - this.size / 2 || this.position.y < edge.y.start + this.size / 2)
+      this.speed.y *= -1;
+    this.position.x += this.speed.x * speedMultiplier;
+    this.position.y += this.speed.y * speedMultiplier;
   }
-  static balls: Ball[] = [];
+
+  draw() {
+    this.p.ellipse(this.position.x, this.position.y, this.size);
+  }
+
+  update() {
+    this.move();
+    this.draw();
+  }
 }
-let speedMultiplier = 1;
+
+function drawWelcome(p: p5) {
+  p.fill(0).textSize(24).textStyle(p.BOLD).textAlign(p.CENTER);
+  const lineSpacing = 40;
+  const content = [
+    "scroll to change speed",
+    "left click anywhere to create ball",
+    "press 0-9 to change color pallets",
+    "enter to save",
+    "backspace/delete to delete balls",
+    "space to toggle trails",
+  ];
+  for (const c in content) {
+    p.text(content[c], p.width / 2, p.height / 2 - (content.length / 2) * lineSpacing + Number(c) * lineSpacing);
+  }
+}
+
+function drawStats(p: p5) {
+  p.fill(255);
+  p.rect(0, p.height - 40, p.width, 40);
+  p.fill(0).textSize(16).textStyle(p.BOLD).textAlign(p.RIGHT);
+  p.text(`Colors: ${colors.colorsArray} Speed: ${speedMultiplier.toFixed(2)}`, p.width - 20, p.height - 20);
+}
 
 const sketch = (p: p5) => {
-  for (let i = 0; i < 10; i++) {
-    Ball.spawnBall(randomFloat(0, p.windowWidth), randomFloat(0, p.windowHeight))
-  }
   let canvas;
-  let enableFreeze: boolean = false;
   let enableTrails: boolean = true;
+  colors = new Colors(p, 1);
+
+  function getRandomSpeed() {
+    return {
+      x: p.random([-4, -2, 2, 4]),
+      y: p.random([-4, -2, 2, 4]),
+    };
+  }
 
   p.preload = () => {};
 
   p.setup = () => {
     canvas = p.createCanvas(p.windowWidth, p.windowHeight);
-    p.angleMode(p.DEGREES);
     p.background(255);
     p.noStroke();
-    p.ellipseMode(p.RADIUS);
-    startColor = p.color(255, 255, 255);
-    newColor = p.color(colors[0]);
-    amt = 0;
+    balls = [];
+    edge = {
+      x: {
+        start: padding,
+        end: p.width - padding,
+      },
+      y: {
+        start: padding,
+        end: p.height - padding,
+      },
+    };
+    drawWelcome(p);
+    p.noLoop();
   };
 
   p.draw = () => {
     if (!enableTrails) {
       p.background(255);
     }
-
-    Ball.balls.forEach((ball) => {
-      if (!enableFreeze) {
-        p.fill(p.lerpColor(startColor, newColor, amt));
-        ball.pos.x += ball.speed.x * speedMultiplier;
-        ball.pos.y += ball.speed.y * speedMultiplier;
-        if (ball.pos.x > p.windowWidth || ball.pos.x < 0) ball.speed.x *= -1;
-        if (ball.pos.y > p.windowHeight || ball.pos.y < 0) ball.speed.y *= -1;
-      }
-      p.ellipse(ball.pos.x, ball.pos.y, ball.size, ball.size);
-    });
-
-    if (!enableFreeze) {
-      amt += 0.01;
-      if (amt >= 1) {
-        amt = 0.0;
-        nextIndex++;
-        if (nextIndex >= colors.length) nextIndex = 0
-        startColor = newColor;
-        newColor = p.color(colors[nextIndex]);
-      }
-    }
+    colors.update();
+    balls.forEach((ball: Ball) => ball.update());
+    balls = balls.filter(
+      (ball: Ball) =>
+        ball.position.x < edge.x.end &&
+        ball.position.y < edge.y.end &&
+        ball.position.x > edge.x.start &&
+        ball.position.y > edge.y.start
+    );
+    drawStats(p);
   };
 
   p.keyPressed = () => {
     // enter
-    if (p.keyCode == 13) {
-      enableFreeze = !enableFreeze;
+    if (p.keyCode === 13 && started) {
+      p.saveCanvas(`BALLS-${new Date().toISOString()}`, "jpg");
     }
     // space
-    if (p.keyCode == 32) {
+    if (p.keyCode === 32) {
       enableTrails = !enableTrails;
     }
-    // delete
-    if (p.keyCode == 46) {
-      Ball.balls = []
+    // delete or backspace
+    if (p.keyCode === 46 || p.keyCode === 8) {
+      balls = [];
+    }
+    // 0-9
+    if (p.keyCode >= 48 && p.keyCode <= 57) {
+      colors = new Colors(p, p.keyCode - 48);
+    }
+    // numpad 0-9
+    if (p.keyCode >= 96 && p.keyCode <= 105) {
+      colors = new Colors(p, p.keyCode - 96);
     }
   };
 
   p.mousePressed = (event: any) => {
     if (p.mouseButton == p.LEFT) {
-      Ball.spawnBall(event.clientX, event.clientY);
+      if (!started) {
+        p.background(255);
+        p.loop();
+        started = true;
+      }
+      const i = balls.length;
+      const ballPos = {
+        x: event.clientX,
+        y: event.clientY,
+      };
+      balls.push(new Ball(p, ballPos, getRandomSpeed(), ballSize, i));
     }
     if (p.mouseButton == p.RIGHT) {
     }
@@ -115,6 +229,16 @@ const sketch = (p: p5) => {
 
   p.windowResized = () => {
     p.resizeCanvas(p.windowWidth, p.windowHeight);
+    edge = {
+      x: {
+        start: padding,
+        end: p.width - padding,
+      },
+      y: {
+        start: padding,
+        end: p.height - padding,
+      },
+    };
   };
 };
 
