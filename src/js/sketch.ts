@@ -36,7 +36,7 @@ const colorPallets = [
 
 let started = false;
 
-let balls: Ball[], edge: Edge, colors: Colors, speedDisplay: p5.Element;
+let balls: Ball[], edge: Edge, colors: Colors, speedDisplay: p5.Element, speedSlider: p5.Element;
 const ballSize = 50;
 let speedMultiplier = 1;
 
@@ -60,7 +60,7 @@ class Colors {
     const _color = this.p.lerpColor(this.startColor, this.newColor, this.amt);
     _color.setAlpha(255);
     this.p.fill(_color);
-    this.amt += 0.01;
+    this.amt += 0.01 * Math.abs(speedMultiplier);
     if (this.amt >= 1) {
       this.amt = 0.0;
       this.nextIndex++;
@@ -108,7 +108,7 @@ class Ball {
 
 function drawWelcome(p: p5) {
   p.fill(0).textSize(48).textStyle(p.BOLD).textAlign(p.LEFT);
-  p.text("🎨 Trails.js", 200, 200);
+  p.text("🎨 Trails.js", 100, 200);
   const lineSpacing = 40;
   const content = [
     "👋 Welcome to trails.js!",
@@ -123,14 +123,14 @@ function drawWelcome(p: p5) {
   ];
   p.fill(0).textSize(24);
   for (const c in content) {
-    p.text(content[c], 200, 300 + Number(c) * lineSpacing);
+    p.text(content[c], 100, 300 + Number(c) * lineSpacing);
   }
 }
 
 function initEdge(p: p5) {
   edge = {
     x: {
-      start: 100,
+      start: 25,
       end: p.width - 25,
     },
     y: {
@@ -140,10 +140,13 @@ function initEdge(p: p5) {
   };
 }
 
-function drawButtons(p: p5) {
-  const wrapper = p.createDiv().addClass("pallet-btn-wrapper");
-  speedDisplay = p.createSpan().addClass('speed');
-  wrapper.child(speedDisplay);
+function drawControls(p: p5) {
+  const controlsWrapper = p.createDiv().addClass("controls-wrapper");
+  speedSlider = p.createSlider(-15, 15, 1, 0.01).addClass("speed-slider").attribute("orient", "vertical");
+  controlsWrapper.child(speedSlider);
+  const palletWrapper = p.createDiv().addClass("pallet-btn-wrapper");
+  speedDisplay = p.createSpan().addClass("speed");
+  controlsWrapper.child(speedDisplay);
   const palletButtons = colorPallets.map((_, index) =>
     p
       .createButton(index.toString())
@@ -153,13 +156,14 @@ function drawButtons(p: p5) {
   palletButtons.forEach((button, index) => {
     button.style(`border-color: ${colorPallets[index][0]}`);
     button.style(`background: linear-gradient(45deg, ${colorPallets[index].join(",")}`);
-    wrapper.child(button);
+    palletWrapper.child(button);
   });
+  controlsWrapper.child(palletWrapper);
   const saveButton = p
     .createButton("💾")
     .addClass("save-btn")
     .mouseClicked(() => save(p));
-  wrapper.child(saveButton);
+  controlsWrapper.child(saveButton);
 }
 
 function save(p: p5) {
@@ -181,12 +185,12 @@ const sketch = (p: p5) => {
   p.preload = () => {};
 
   p.setup = () => {
-    canvas = p.createCanvas(p.windowWidth, p.windowHeight);
+    canvas = p.createCanvas(p.windowWidth - 70, p.windowHeight).addClass('p5-canvas');
     p.background(255);
     p.noStroke();
     balls = [];
     initEdge(p);
-    drawButtons(p);
+    drawControls(p);
     drawWelcome(p);
   };
 
@@ -195,7 +199,6 @@ const sketch = (p: p5) => {
       p.background(255);
     }
     colors.update();
-    balls.forEach((ball: Ball) => ball.update());
     balls = balls.filter(
       (ball: Ball) =>
         ball.position.x <= edge.x.end + ballSize / 2 &&
@@ -203,6 +206,8 @@ const sketch = (p: p5) => {
         ball.position.x >= edge.x.start - ballSize / 2 &&
         ball.position.y >= edge.y.start - ballSize / 2
     );
+    balls.forEach((ball: Ball) => ball.update());
+    speedMultiplier = Number(speedSlider.value());
     speedDisplay.html(speedMultiplier.toFixed(2));
   };
 
@@ -239,8 +244,8 @@ const sketch = (p: p5) => {
         }
         const i = balls.length;
         const ballPos = {
-          x: event.clientX,
-          y: event.clientY,
+          x: p.mouseX,
+          y: p.mouseY,
         };
         if (
           ballPos.x < edge.x.end - ballSize / 2 &&
@@ -254,7 +259,10 @@ const sketch = (p: p5) => {
   };
 
   p.mouseWheel = (event: any) => {
-    if (event) speedMultiplier += event.delta * 0.0001;
+    if (event) {
+      speedMultiplier += event.delta * 0.0001;
+      speedSlider.value(speedMultiplier + event.delta * 0.0001);
+    }
   };
 
   // p.windowResized = () => {
