@@ -13,7 +13,7 @@ module.exports = {
   devServer: {
     inline: true,
     hot: true,
-    port: 3333,
+    port: 3333
   },
   module: {
     rules: [

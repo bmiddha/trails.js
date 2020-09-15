@@ -36,10 +36,9 @@ const colorPallets = [
 
 let started = false;
 
-let balls: Ball[], edge: Edge, colors: Colors;
+let balls: Ball[], edge: Edge, colors: Colors, speedDisplay: p5.Element;
 const ballSize = 50;
 let speedMultiplier = 1;
-const padding = 50;
 
 class Colors {
   p: p5;
@@ -108,26 +107,63 @@ class Ball {
 }
 
 function drawWelcome(p: p5) {
-  p.fill(0).textSize(24).textStyle(p.BOLD).textAlign(p.CENTER);
+  p.fill(0).textSize(48).textStyle(p.BOLD).textAlign(p.LEFT);
+  p.text("🎨 Trails.js", 200, 200);
   const lineSpacing = 40;
   const content = [
-    "scroll to change speed",
-    "left click anywhere to create ball",
-    "press 0-9 to change color pallets",
-    "enter to save",
-    "backspace/delete to delete balls",
-    "space to toggle trails",
+    "👋 Welcome to trails.js!",
+    "",
+    "Controls:",
+    "MouseWheel: Increase/Decrease Speed",
+    "Left/Right Click: Spawn Trail",
+    "0-9: Select Color Pallet",
+    "Enter: Save as jpg",
+    "Backspace/Delete: Delete objects leaving trails",
+    "Space: Toggle Trails",
   ];
+  p.fill(0).textSize(24);
   for (const c in content) {
-    p.text(content[c], p.width / 2, p.height / 2 - (content.length / 2) * lineSpacing + Number(c) * lineSpacing);
+    p.text(content[c], 200, 300 + Number(c) * lineSpacing);
   }
 }
 
-function drawStats(p: p5) {
-  p.fill(255);
-  p.rect(0, p.height - 40, p.width, 40);
-  p.fill(0).textSize(16).textStyle(p.BOLD).textAlign(p.RIGHT);
-  p.text(`Colors: ${colors.colorsArray} Speed: ${speedMultiplier.toFixed(2)}`, p.width - 20, p.height - 20);
+function initEdge(p: p5) {
+  edge = {
+    x: {
+      start: 100,
+      end: p.width - 25,
+    },
+    y: {
+      start: 25,
+      end: p.height - 25,
+    },
+  };
+}
+
+function drawButtons(p: p5) {
+  const wrapper = p.createDiv().addClass("pallet-btn-wrapper");
+  speedDisplay = p.createSpan().addClass('speed');
+  wrapper.child(speedDisplay);
+  const palletButtons = colorPallets.map((_, index) =>
+    p
+      .createButton(index.toString())
+      .addClass("pallet-btn")
+      .mouseClicked(() => (colors = new Colors(p, index)))
+  );
+  palletButtons.forEach((button, index) => {
+    button.style(`border-color: ${colorPallets[index][0]}`);
+    button.style(`background: linear-gradient(45deg, ${colorPallets[index].join(",")}`);
+    wrapper.child(button);
+  });
+  const saveButton = p
+    .createButton("💾")
+    .addClass("save-btn")
+    .mouseClicked(() => save(p));
+  wrapper.child(saveButton);
+}
+
+function save(p: p5) {
+  p.saveCanvas(`BALLS-${new Date().toISOString()}`, "jpg");
 }
 
 const sketch = (p: p5) => {
@@ -149,16 +185,8 @@ const sketch = (p: p5) => {
     p.background(255);
     p.noStroke();
     balls = [];
-    edge = {
-      x: {
-        start: padding,
-        end: p.width - padding,
-      },
-      y: {
-        start: padding,
-        end: p.height - padding,
-      },
-    };
+    initEdge(p);
+    drawButtons(p);
     drawWelcome(p);
   };
 
@@ -170,18 +198,18 @@ const sketch = (p: p5) => {
     balls.forEach((ball: Ball) => ball.update());
     balls = balls.filter(
       (ball: Ball) =>
-        ball.position.x < edge.x.end &&
-        ball.position.y < edge.y.end &&
-        ball.position.x > edge.x.start &&
-        ball.position.y > edge.y.start
+        ball.position.x <= edge.x.end + ballSize / 2 &&
+        ball.position.y <= edge.y.end + ballSize / 2 &&
+        ball.position.x >= edge.x.start - ballSize / 2 &&
+        ball.position.y >= edge.y.start - ballSize / 2
     );
-    drawStats(p);
+    speedDisplay.html(speedMultiplier.toFixed(2));
   };
 
   p.keyPressed = () => {
     // enter
     if (p.keyCode === 13 && started) {
-      p.saveCanvas(`BALLS-${new Date().toISOString()}`, "jpg");
+      save(p);
     }
     // space
     if (p.keyCode === 32) {
@@ -202,20 +230,26 @@ const sketch = (p: p5) => {
   };
 
   p.mousePressed = (event: any) => {
-    if (p.mouseButton == p.LEFT) {
-      if (!started) {
-        p.background(255);
-        p.loop();
-        started = true;
+    if (p.mouseX < edge.x.end && p.mouseY < edge.y.end && p.mouseX > edge.x.start && p.mouseY > edge.y.start) {
+      if (p.mouseButton == p.LEFT || p.mouseButton == p.RIGHT) {
+        if (!started) {
+          p.background(255);
+          p.loop();
+          started = true;
+        }
+        const i = balls.length;
+        const ballPos = {
+          x: event.clientX,
+          y: event.clientY,
+        };
+        if (
+          ballPos.x < edge.x.end - ballSize / 2 &&
+          ballPos.y < edge.y.end - ballSize / 2 &&
+          ballPos.x > edge.x.start + ballSize / 2 &&
+          ballPos.y > edge.y.start + ballSize / 2
+        )
+          balls.push(new Ball(p, ballPos, getRandomSpeed(), ballSize, i));
       }
-      const i = balls.length;
-      const ballPos = {
-        x: event.clientX,
-        y: event.clientY,
-      };
-      balls.push(new Ball(p, ballPos, getRandomSpeed(), ballSize, i));
-    }
-    if (p.mouseButton == p.RIGHT) {
     }
   };
 
@@ -223,19 +257,10 @@ const sketch = (p: p5) => {
     if (event) speedMultiplier += event.delta * 0.0001;
   };
 
-  p.windowResized = () => {
-    p.resizeCanvas(p.windowWidth, p.windowHeight);
-    edge = {
-      x: {
-        start: padding,
-        end: p.width - padding,
-      },
-      y: {
-        start: padding,
-        end: p.height - padding,
-      },
-    };
-  };
+  // p.windowResized = () => {
+  //   p.resizeCanvas(p.windowWidth, p.windowHeight);
+  //   initEdge(p);
+  // };
 };
 
 new p5(sketch);
