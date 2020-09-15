@@ -22,19 +22,16 @@ type Edge = {
 document.addEventListener("contextmenu", (event) => event.preventDefault());
 
 const colorPallets = [
-  ["#12c2e9", "#c471ed", "#f64f59"], // JShine
-  ["#0F2027", "#203A43", "#f64f59"], // Moonlit Asteroid
-  ["#a8c0ff", "#3f2b96"], // Slight Ocean View
-  ["#34e89e", "#0f3443"], // Pacific Dream
-  ["#24C6DC", "#514A9D"], // Mantle
-  ["#e1eec3", "#f05053"], // Velvet Sun
-  // ["#e3e8ea", "#bccad0", "#9ba8ae", "#707a7e", "#495054"], // 0 - monochrome grey
-  // ["#8808e0", "#9808e0", "#a808e0", "#b808e0", "#c808e0"], // 1 - purple
-  // ["#4C5B5C", "#FF715B", "#F9CB40", "#BCED09", "#2F52E0"], // 2
-  // ["#0D1821", "#344966", "#E6AACE", "#F0F4EF", "#BFCC94"], // 3
-  // ["#BFCC94", "#F7717D", "#DE639A", "#7F2982", "#16001E"], // 4
-  // ["#16001E", "#BDADEA", "#BEA2C2", "#A37871", "#4E4B5C"], // 5
-  // ["#2E4939", "#4CAF9C", "#F4994B", "#F44731", "#7B1516"], // 6
+  ["#12c2e9", "#c471ed", "#f64f59"], // 0 - JShine
+  ["#0F2027", "#203A43", "#f64f59"], // 1 - Moonlit Asteroid
+  ["#a8c0ff", "#3f2b96"], // 2 - Slight Ocean View
+  ["#34e89e", "#0f3443"], // 3 - Pacific Dream
+  ["#24C6DC", "#514A9D"], // 4 - Mantle
+  ["#e1eec3", "#f05053"], // 5 - Velvet Sun
+  ["#5C258D", "#4389A2"], // 6 - Shroom Haze
+  ["#614385", "#516395"], // 7 - Kashmir
+  ["#1FA2FF", "#12D8FA", "#A6FFCB"], // 8 - Stripe
+  ["#77A1D3", "#79CBCA", "#E684AE"], // 9 - Hazel
 ];
 
 let started = false;
@@ -163,7 +160,6 @@ const sketch = (p: p5) => {
       },
     };
     drawWelcome(p);
-    p.noLoop();
   };
 
   p.draw = () => {
